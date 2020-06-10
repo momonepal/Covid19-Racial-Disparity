@@ -1,0 +1,112 @@
+---
+title: "Racial Disparity"
+author : Mohit K C
+output: html_document
+---
+
+```{r loadthings, echo=FALSE, message=FALSE, warning=FALSE}
+library(mosaic)
+library(ggplot2)
+library(dplyr)
+library(RColorBrewer)
+library(fivethirtyeight)
+library(hrbrthemes)
+library(tidyverse)
+library(readxl)
+```
+
+The data is obtained from the website https://www.apmresearchlab.org/covid/deaths-by-race  
+
+
+```{r read}
+datarace  <- read.csv("datarace.csv")
+mydata <- datarace[-c(15),]  #removed the row that had a non state data, apart from this the data is clean and correct and thus has no other outliers
+#head(mydata)
+```
+
+> Question : Is there a significant difference between Black American's percentage of total Covid-19 death and the proportion of Black Population of each state?
+
+
+$H_0:$ There is no difference between the total percentage of Black Covid-19 death and the proportion of Black Population 
+
+
+$H_a:$ There is a significant difference between the total percentage of Black Covid-19 death and the proportion of Black Population 
+
+
+
+
+*Answer:* 
+
+
+
+From the two sample t-test, we get **p-value = 0.002747** < 0.05. Thus we can **reject** the null hypothesis at the 0.05 significance level and accept the idea that there is a significant difference between the total percentage of Black Covid-19 death and the proportion of Black Population.
+
+```{r subsetting}
+death <- mydata$Percentage_of_deaths
+popu <- mydata$Percentage_of_population
+```
+
+```{r histo}
+hist(death, 
+     breaks=8 ,
+     col="lightblue",
+     xlab="Percentage",
+     ylab="",
+     xlim=c(0,100), main = "Percentage Of total death")
+
+hist(popu, 
+     breaks= 5,
+     col="lightgreen",
+     xlab="Percentage",
+     ylab="",
+     xlim=c(0,100), main = "Percentage Of Black Population")
+
+#ggplot(mydata, aes(x=Percentage_of_deaths))+
+#  geom_histogram(fill = 'lightblue', breaks=seq(0,100,by=11)) + ggtitle("Percentage Of total death") + xlab("Percentage")
+
+#ggplot(mydata, aes(x=Percentage_of_population))+
+ # geom_histogram(fill = 'lightgreen',breaks=seq(0,100,by=10),binwidth = 15) + ggtitle("Percentage Of Black Population") + xlab("Percentage")
+
+```
+
+
+From the above two histograms we can see that there is noticeable difference in the spread of values of the percentage of deaths and the percentage of total population. This allows us to suspect that there might be a difference and thus set up a null and alternate hypothesis, and then use t-test to either accept/reject the null hypothesis.
+
+```{r test, eval=FALSE}
+t.test(mydata$Percentage_of_deaths)
+t.test(mydata$Percentage_of_population)
+t.test(mydata$Percentage_of_deaths,mydata$Percentage_of_population)
+```
+
+
+
+>A furthur graph has been plot to be able to see and compare the Difference between the Percentage of total death and the Percentage of Black Population in each state.  
+
+
+```{r ordered}
+mydata$Black.deaths.byState <- factor(mydata$Black.deaths.byState, levels = mydata$Black.deaths.byState[order(mydata$Percentage_of_deaths)]) #arranging the data in ordered form
+```
+
+
+```{r plot, fig.height=9, fig.width=16, warning=FALSE}
+
+  ggplot(mydata) +
+  geom_segment( aes(x=Black.deaths.byState, xend=Black.deaths.byState, y=Percentage_of_population, yend=Percentage_of_deaths), color="black")  +
+  geom_point( aes(x=Black.deaths.byState, y=Percentage_of_population), color='green', size=4 ) +
+  geom_point( aes(x=Black.deaths.byState, y=Percentage_of_deaths), color='red', size=4 ) +
+  coord_flip()+ 
+  theme_ipsum() +
+  theme(
+    legend.position = "none", 
+    panel.border = element_blank(),
+  ) +
+  xlab("") +
+  ylab("P e r c e n t a g e ( % )") + ggtitle("Difference between Percentage of total death(Red) & Percentage of Black Population (Green) ")
+
+  
+  
+
+```
+
+*Resources:*
+https://www.r-graph-gallery.com/303-lollipop-plot-with-2-values.html
